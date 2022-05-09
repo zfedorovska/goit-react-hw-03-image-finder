@@ -4,7 +4,7 @@ function fetchGallery(query, page) {
     if (response.ok) {
           return response.json();
         }
-    return Promise.reject(new Error(`Нет картинок по запросу ${query}`));
+    return Promise.reject(new Error(`No pictures by query ${query}`));
   });
 }
 
