@@ -89,22 +89,20 @@ export default class App extends Component {
     return (
       <div>
         <Searchbar onSubmit={this.handleFormSubmit} />
-        {status === 'resolved' && (
-          <div>
-            <ImageGallery
-              galleryItemsList={this.state.galleryItemsList}
-              handleGalleryItemClick={this.handleGalleryItemClick}
-            />
-            {showModal && (
-              <Modal onClose={this.toggleModal}>
-                <img src={this.state.activeImageLargeUrl} alt="" />
-              </Modal>
-            )}
-            {totalHits > galleryItemsList.length > 0 && (
-              <Button onClick={this.handleLoadMoreButton} />
-            )}
-          </div>
-        )}
+        <div>
+          <ImageGallery
+            galleryItemsList={this.state.galleryItemsList}
+            handleGalleryItemClick={this.handleGalleryItemClick}
+          />
+          {showModal && (
+            <Modal onClose={this.toggleModal}>
+              <img src={this.state.activeImageLargeUrl} alt="" />
+            </Modal>
+          )}
+          {totalHits > galleryItemsList.length > 0 && (
+            <Button onClick={this.handleLoadMoreButton} />
+          )}
+        </div>
         {status === 'rejected' && <p>No pictures are found by query</p>}
         {status === 'pending' && <Loader />}
       </div>
