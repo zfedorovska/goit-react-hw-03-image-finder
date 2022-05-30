@@ -40,13 +40,18 @@ export default class App extends Component {
       galleryAPI
         .fetchGallery(nextSearchValue, nextPage)
         .then(response => {
+          const hits = response.hits.map(
+            ({ webformatURL, tags, id, largeImageURL }) => ({
+              webformatURL,
+              tags,
+              id,
+              largeImageURL,
+            })
+          );
           if ((prevSearchValue !== nextSearchValue) | (this.state.page === 1)) {
-            nextGalleryItems = [...response.hits];
+            nextGalleryItems = [...hits];
           } else {
-            nextGalleryItems = [
-              ...prevState.galleryItemsList,
-              ...response.hits,
-            ];
+            nextGalleryItems = [...prevState.galleryItemsList, ...hits];
           }
           this.setState({
             status: Status.RESOLVED,
