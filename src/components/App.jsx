@@ -28,35 +28,16 @@ export default class App extends Component {
   componentDidUpdate(prevProps, prevState) {
     const prevSearchValue = prevState.searchValue;
     const nextSearchValue = this.state.searchValue;
-    let nextGalleryItems = prevState.galleryItemsList;
-    let nextPage = this.state.page;
 
-    if (
-      (prevSearchValue !== nextSearchValue) |
-      (prevState.page !== this.state.page)
-    ) {
+    if (prevSearchValue !== nextSearchValue) {
       this.setState({ status: Status.PENDING });
-      nextPage = prevSearchValue !== nextSearchValue ? 1 : nextPage;
       galleryAPI
-        .fetchGallery(nextSearchValue, nextPage)
+        .fetchGallery(nextSearchValue, 1)
         .then(response => {
-          const hits = response.hits.map(
-            ({ webformatURL, tags, id, largeImageURL }) => ({
-              webformatURL,
-              tags,
-              id,
-              largeImageURL,
-            })
-          );
-          if ((prevSearchValue !== nextSearchValue) | (this.state.page === 1)) {
-            nextGalleryItems = [...hits];
-          } else {
-            nextGalleryItems = [...prevState.galleryItemsList, ...hits];
-          }
           this.setState({
             status: Status.RESOLVED,
-            galleryItemsList: nextGalleryItems,
-            page: nextPage,
+            galleryItemsList: [...this.mapHitsArray(response.hits)],
+            page: 1,
             totalHits: response.totalHits,
           });
         })
@@ -64,7 +45,33 @@ export default class App extends Component {
           this.setState({ error, status: Status.REJECTED });
         });
     }
+
+    if (prevState.page < this.state.page) {
+      this.setState({ status: Status.PENDING });
+      galleryAPI
+        .fetchGallery(nextSearchValue, this.state.page)
+        .then(response => {
+          const hits = this.mapHitsArray(response.hits);
+          this.setState({
+            status: Status.RESOLVED,
+            galleryItemsList: [...prevState.galleryItemsList, ...hits],
+            page: this.state.page,
+          });
+        })
+        .catch(error => {
+          this.setState({ error, status: Status.REJECTED });
+        });
+    }
   }
+
+  mapHitsArray = array => {
+    return array.map(({ webformatURL, tags, id, largeImageURL }) => ({
+      webformatURL,
+      tags,
+      id,
+      largeImageURL,
+    }));
+  };
 
   handleLoadMoreButton = () => {
     this.setState(state => ({
