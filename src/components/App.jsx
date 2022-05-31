@@ -93,8 +93,7 @@ export default class App extends Component {
   };
 
   render() {
-    const { searchValue, status, galleryItemsList, showModal, totalHits } =
-      this.state;
+    const { status, galleryItemsList, showModal, totalHits } = this.state;
     return (
       <div>
         <Searchbar onSubmit={this.handleFormSubmit} />
