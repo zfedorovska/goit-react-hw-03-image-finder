@@ -11,6 +11,7 @@ const Status = {
   PENDING: 'pending',
   RESOLVED: 'resolved',
   REJECTED: 'rejected',
+  NOTFOUND: 'notFound',
 };
 
 export default class App extends Component {
@@ -28,34 +29,29 @@ export default class App extends Component {
   componentDidUpdate(prevProps, prevState) {
     const prevSearchValue = prevState.searchValue;
     const nextSearchValue = this.state.searchValue;
-
-    if (prevSearchValue !== nextSearchValue) {
+    let nextPage = this.state.page;
+    let nextGalleryItems = prevState.galleryItemsList;
+    if (
+      (prevSearchValue !== nextSearchValue) |
+      (prevState.page < this.state.page)
+    ) {
       this.setState({ status: Status.PENDING });
+      nextPage = prevSearchValue !== nextSearchValue ? 1 : nextPage;
+      nextGalleryItems =
+        prevSearchValue !== nextSearchValue ? [] : nextGalleryItems;
       galleryAPI
-        .fetchGallery(nextSearchValue, 1)
-        .then(response => {
-          this.setState({
-            status: Status.RESOLVED,
-            galleryItemsList: [...this.mapHitsArray(response.hits)],
-            page: 1,
-            totalHits: response.totalHits,
-          });
-        })
-        .catch(error => {
-          this.setState({ error, status: Status.REJECTED });
-        });
-    }
-
-    if (prevState.page < this.state.page) {
-      this.setState({ status: Status.PENDING });
-      galleryAPI
-        .fetchGallery(nextSearchValue, this.state.page)
+        .fetchGallery(nextSearchValue, nextPage)
         .then(response => {
           const hits = this.mapHitsArray(response.hits);
+          let actualStatus =
+            hits.length === 0 && nextPage === 1
+              ? Status.NOTFOUND
+              : Status.RESOLVED;
           this.setState({
-            status: Status.RESOLVED,
-            galleryItemsList: [...prevState.galleryItemsList, ...hits],
-            page: this.state.page,
+            status: actualStatus,
+            page: nextPage,
+            galleryItemsList: [...nextGalleryItems, ...hits],
+            totalHits: response.totalHits,
           });
         })
         .catch(error => {
@@ -97,7 +93,8 @@ export default class App extends Component {
   };
 
   render() {
-    const { status, galleryItemsList, showModal, totalHits } = this.state;
+    const { searchValue, status, galleryItemsList, showModal, totalHits } =
+      this.state;
     return (
       <div>
         <Searchbar onSubmit={this.handleFormSubmit} />
@@ -115,7 +112,8 @@ export default class App extends Component {
             <Button onClick={this.handleLoadMoreButton} />
           )}
         </div>
-        {status === 'rejected' && <p>No pictures are found by query</p>}
+        {status === 'notFound' && <p>No pictures are found by query</p>}
+        {status === 'rejected' && <p>Server returns error</p>}
         {status === 'pending' && <Loader />}
       </div>
     );
