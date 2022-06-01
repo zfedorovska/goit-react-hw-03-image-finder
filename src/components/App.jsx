@@ -29,16 +29,11 @@ export default class App extends Component {
   componentDidUpdate(prevProps, prevState) {
     const prevSearchValue = prevState.searchValue;
     const nextSearchValue = this.state.searchValue;
-    let nextPage = this.state.page;
-    let nextGalleryItems = prevState.galleryItemsList;
-    if (
-      (prevSearchValue !== nextSearchValue) |
-      (prevState.page < this.state.page)
-    ) {
+    let nextGalleryItems =
+      prevSearchValue !== nextSearchValue ? [] : prevState.galleryItemsList;
+    const nextPage = this.state.page;
+    if ((prevSearchValue !== nextSearchValue) | (prevState.page < nextPage)) {
       this.setState({ status: Status.PENDING });
-      nextPage = prevSearchValue !== nextSearchValue ? 1 : nextPage;
-      nextGalleryItems =
-        prevSearchValue !== nextSearchValue ? [] : nextGalleryItems;
       galleryAPI
         .fetchGallery(nextSearchValue, nextPage)
         .then(response => {
@@ -49,7 +44,6 @@ export default class App extends Component {
               : Status.RESOLVED;
           this.setState({
             status: actualStatus,
-            page: nextPage,
             galleryItemsList: [...nextGalleryItems, ...hits],
             totalHits: response.totalHits,
           });
@@ -89,7 +83,7 @@ export default class App extends Component {
   };
 
   handleFormSubmit = searchValue => {
-    this.setState({ searchValue });
+    this.setState({ searchValue, galleryItemsList: [], page: 1 });
   };
 
   render() {
